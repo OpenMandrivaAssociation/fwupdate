@@ -22,7 +22,12 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 %apply_patches
 
 %build
-%make CFLAGS=" -fuse-ld=bfd" libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+# build fails with ld-gold
+mkdir ld
+ln -s `which ld.bfd` ld/ld
+export PATH=`pwd`/ld:$PATH
+
+%make libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
