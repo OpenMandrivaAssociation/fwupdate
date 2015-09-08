@@ -7,6 +7,7 @@ Release:	1
 License:	GPLv2+
 URL:		https://github.com/rhinstaller/fwupdate
 Source0:        https://github.com/rhinstaller/fwupdate/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
+Patch0:		fwupdate-0.4-respect-cflags-and-ldflags.patch
 BuildRequires:	pkgconfig(efivar) >= 0.21
 BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
@@ -18,9 +19,10 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 
 %prep
 %setup -q
+%apply_patches
 
 %build
-%make OPT_FLAGS="%{optflags}" ldflags="%{ldflags}" libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+%make CFLAGS="%{optflags}" LDFLAGS="%{ldflags}" libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
