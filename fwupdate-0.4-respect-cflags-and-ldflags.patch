@@ -1,42 +1,51 @@
+diff -Naur fwupdate-0.4/Make.defaults fwupdate-0.4.tpg/Make.defaults
+--- fwupdate-0.4/Make.defaults	2015-06-02 18:29:58.000000000 +0000
++++ fwupdate-0.4.tpg/Make.defaults	2015-09-08 16:24:17.316818376 +0000
+@@ -1,6 +1,6 @@
+ INSTALL 	?= install
+ MAKE		?= make
+-CC		= $(CROSS_COMPILE)gcc
++CC		?= $(CROSS_COMPILE)gcc
+ LD		= $(CROSS_COMPILE)ld
+ OBJCOPY		= $(CROSS_COMPILE)objcopy
+ XGETTEXT	= xgettext
 diff -Naur fwupdate-0.4/efi/Makefile fwupdate-0.4.tpg/efi/Makefile
 --- fwupdate-0.4/efi/Makefile	2015-06-02 18:29:58.000000000 +0000
-+++ fwupdate-0.4.tpg/efi/Makefile	2015-09-08 16:04:16.289549930 +0000
++++ fwupdate-0.4.tpg/efi/Makefile	2015-09-08 16:34:40.427015816 +0000
 @@ -3,13 +3,13 @@
  include $(TOPDIR)/Make.defaults
  
  
 -CFLAGS		= -O0 -g3
-+CFLAGS		?= -O0 -g3
++CFLAGS		= $(OPT_FLAGS) -O0 -g3
  BUILDFLAGS	:= $(CFLAGS) -fpic -Wall -fshort-wchar \
  	-fno-strict-aliasing -fno-merge-constants -ffreestanding \
  	-fno-stack-protector -fno-stack-check --std=c11 -DCONFIG_$(ARCH) \
  	-D__KERNEL__ -I/usr/include/efi/ -I/usr/include/efi/$(ARCH)/ \
  	-iquote$(TOPDIR)/include
 -LDFLAGS		= -nostdlib --warn-common --no-undefined --fatal-warnings \
-+LDFLAGS		?= $(LDFLAGS) -nostdlib --warn-common --no-undefined --fatal-warnings \
++LDFLAGS		= $(EXTRA_LDFLAGS) -nostdlib --warn-common --no-undefined --fatal-warnings \
  	-shared -Bsymbolic -L$(LIBDIR) -L$(GNUEFIDIR) \
  	$(GNUEFIDIR)/crt0-efi-$(ARCH).o
  
 diff -Naur fwupdate-0.4/linux/Makefile fwupdate-0.4.tpg/linux/Makefile
 --- fwupdate-0.4/linux/Makefile	2015-06-02 18:29:58.000000000 +0000
-+++ fwupdate-0.4.tpg/linux/Makefile	2015-09-08 16:05:40.828676061 +0000
-@@ -5,16 +5,16 @@
++++ fwupdate-0.4.tpg/linux/Makefile	2015-09-08 16:35:42.281710359 +0000
+@@ -5,7 +5,7 @@
  LIB_LIBS= pthread
  BIN_LIBS= popt pthread
  PKLIBS	= efivar efiboot
 -CFLAGS	= -g -O0
-+CFLAGS	?= -g -O0
++CFLAGS	= $(OPT_FLAGS) -g -O0
  PJONES  =
  BIN_CCLDFLAGS = $(foreach lib,$(BIN_LIBS),-l$(lib)) \
  	$(foreach pklib,$(PKLIBS), \
- 		$(shell pkg-config --libs-only-l --libs-only-other $(pklib))) \
--	-pie -fPIE -Wl,-z,relro,-z,now -L.
-+	$(LDFLAGS) -pie -fPIE -Wl,-z,relro,-z,now -L.
+@@ -14,7 +14,7 @@
  LIB_CCLDFLAGS = $(foreach lib,$(LIB_LIBS),-l$(lib)) \
  	$(foreach pklib,$(PKLIBS), \
  		$(shell pkg-config --libs-only-l --libs-only-other $(pklib))) \
 -	-shared -fPIC -Wl,-z,relro,-z,now
-+	$(LDFLAGS) -shared -fPIC -Wl,-z,relro,-z,now
++	$(EXTRA_LDFLAGS) -shared -fPIC -Wl,-z,relro,-z,now
  
  BUILDFLAGS := $(CFLAGS) -Wall -Wno-unused-result -Wno-unused-function \
  	-Wsign-compare -Werror=sign-compare \
