@@ -1,4 +1,5 @@
 %define efidir openmandriva
+%define _disable_lto 1
 
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
@@ -22,7 +23,7 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 %apply_patches
 
 %build
-%make CC=gcc OPT_FLAGS="%{optflags} " EXTRA_LDFLAGS="%{ldflags}" libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+%make OPT_FLAGS="%{optflags} " EXTRA_LDFLAGS="%{ldflags}" libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
