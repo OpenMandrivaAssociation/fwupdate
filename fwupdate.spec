@@ -3,7 +3,7 @@
 
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
-Version:	0.4
+Version:	0.5
 Release:	1
 License:	GPLv2+
 URL:		https://github.com/rhinstaller/fwupdate
@@ -11,6 +11,7 @@ Source0:        https://github.com/rhinstaller/fwupdate/releases/download/%{name
 BuildRequires:	pkgconfig(efivar) >= 0.21
 BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
+BuildRequires:	systemd
 Requires:	efibootmgr >= 0.12
 ExclusiveArch:	x86_64 %{ix86} aarch64
 
@@ -19,22 +20,14 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 
 %prep
 %setup -q
-%apply_patches
 
 %build
-# build fails with ld-gold
-mkdir ld
-ln -s `which ld.bfd` ld/ld
-export PATH=`pwd`/ld:$PATH
+%setup_compile_flags
 
 %make libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
-
-%post
-efibootmgr -b 1337 -B >/dev/null || :
-efibootmgr -C -b 1337 -d /dev/sda -p 1 -l /EFI/%{efidir}/fwupdate.efi -L "Firmware Update" >/dev/null || :
 
 %files
 %dir /boot/efi/EFI/%{efidir}/fw/
