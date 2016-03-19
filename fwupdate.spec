@@ -24,7 +24,7 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 %build
 %setup_compile_flags
 
-%make libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+%make CC=%{__cc} libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
