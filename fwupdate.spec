@@ -22,13 +22,10 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 %setup -q
 
 %build
-# (tpg) fix build with clang
-%global optflags %optflags -Qunused-arguments
-
-# (tpg) remove hardcoded flags which clang does not understand
-sed -i -e "s/-maccumulate-outgoing-args//g" -e "s/-fno-merge-constants//" efi/Makefile
-
 %setup_compile_flags
+# (tpg) clang can't build it
+export CC=gcc
+export CXX=g++
 
 %make CC=%{__cc} libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
