@@ -3,15 +3,15 @@
 
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
-Version:	9
+Version:	10
 Release:	1
 License:	GPLv2+
 URL:		https://github.com/rhinstaller/fwupdate
-Source0:        https://github.com/rhinstaller/fwupdate/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
+Source0:	https://github.com/rhinstaller/fwupdate/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
 BuildRequires:	pkgconfig(efivar) >= 0.21
 BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
-BuildRequires:	systemd
+BuildRequires:	pkgconfig(systemd)
 Requires:	efibootmgr >= 0.12
 ExclusiveArch:	x86_64 %{ix86} aarch64
 
