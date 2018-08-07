@@ -3,7 +3,7 @@
 
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
-Version:	10
+Version:	12
 Release:	1
 License:	GPLv2+
 URL:		https://github.com/rhinstaller/fwupdate
@@ -13,7 +13,7 @@ BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
 BuildRequires:	pkgconfig(systemd)
 Requires:	efibootmgr >= 0.12
-ExclusiveArch:	x86_64 %{ix86} aarch64
+ExclusiveArch:	x86_64 %{ix86} aarch64 znver1
 
 %description
 fwupdate provides a simple command line interface to the UEFI firmware updates.
