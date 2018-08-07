@@ -22,12 +22,11 @@ fwupdate provides a simple command line interface to the UEFI firmware updates.
 %setup -q
 
 %build
-%setup_compile_flags
 # (tpg) clang can't build it
 export CC=gcc
 export CXX=g++
 
-%make CC=gcc libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+%make OPT_FLAGS="%{optflags}" CC=gcc libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
 
 %install
 %makeinstall_std EFIDIR=%{efidir}
