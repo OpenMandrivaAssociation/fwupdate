@@ -13,7 +13,7 @@ BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
 BuildRequires:	pkgconfig(systemd)
 Requires:	efibootmgr >= 0.12
-ExclusiveArch:	x86_64 %{ix86} aarch64 znver1
+ExclusiveArch:	%{x86_64} %{ix86} aarch64
 
 %description
 fwupdate provides a simple command line interface to the UEFI firmware updates.
