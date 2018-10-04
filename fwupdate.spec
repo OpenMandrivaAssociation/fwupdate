@@ -12,28 +12,50 @@ BuildRequires:	pkgconfig(efivar) >= 0.21
 BuildRequires:	pkgconfig(efiboot)
 BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
-BuildRequires:	pkgconfig(systemd)
+BuildRequires:	systemd-macros
+BuildRequires:	pesign
+%ifarch x86_64 %{ix86}
+BuildRequires:	pkgconfig(libsmbios_c)
+%endif
 Requires:	efibootmgr >= 0.12
 ExclusiveArch:	%{x86_64} %{ix86} aarch64
+
+
+
+%ifarch %{x86_64}
+%global efiarch x64
+%endif
+%ifarch %{ix86}
+%global efiarch ia32
+%endif
+%ifarch aarch64
+%global efiarch aa64
+%endif
 
 %description
 fwupdate provides a simple command line interface to the UEFI firmware updates.
 
 %prep
-%setup -q
+%autosetup -p1
 
 %build
 # (tpg) clang can't build it
 export CC=gcc
 export CXX=g++
 
-%make OPT_FLAGS="%{optflags}" CC=gcc libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+%make_build OPT_FLAGS="%{optflags}" CC=gcc libdir="%{_libdir}" bindir="%{_bindir}" EFIDIR="%{efidir}"
+
+# (tpg) sign EFI image
+mv -v efi/fwup%{efiarch}.efi efi/fwup%{efiarch}.unsigned.efi
+%pesign -s -i efi/fwup%{efiarch}.unsigned.efi -o efi/fwup%{efiarch}.efi
 
 %install
-%makeinstall_std EFIDIR=%{efidir}
+%make_install EFIDIR=%{efidir}
+
+install -d %{buildroot}%{_presetdir}
+cat > %{buildroot}%{_presetdir}/86-%{name}.preset << EOF
+enable fwupdate-cleanup.service
+EOF
 
 %files
-%dir /boot/efi/EFI/%{efidir}/fw/
-%{_bindir}/fwupdate
-/boot/efi/EFI/%{efidir}/fwupdate.efi
-%{_datadir}/locale/en/*.po
+86-%{name}.preset 
