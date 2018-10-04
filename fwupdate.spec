@@ -9,6 +9,7 @@ License:	GPLv2+
 URL:		https://github.com/rhinstaller/fwupdate
 Source0:	https://github.com/rhinstaller/fwupdate/releases/download/%{name}-%{version}/%{name}-%{version}.tar.bz2
 BuildRequires:	pkgconfig(efivar) >= 0.21
+BuildRequires:	pkgconfig(efiboot)
 BuildRequires:	popt-devel
 BuildRequires:	gnu-efi
 BuildRequires:	pkgconfig(systemd)
