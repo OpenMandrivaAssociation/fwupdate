@@ -1,0 +1,201 @@
+From 1fc58e4d467bf553cd2e71fb06f75aad5cdc86ba Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Thu, 4 Mar 2021 10:58:09 -0600
+Subject: [PATCH 6/6] Add support for SBAT.
+
+This patch was merged from Debian buster and developed
+by Steve McIntyre <steve@einval.com>.
+---
+ Make.defaults           |  2 ++
+ Make.rules              |  4 ++++
+ efi/Makefile            | 24 ++++++++++++++++++++----
+ efi/data/sbat.csv.in    |  2 ++
+ efi/elf_aarch64_efi.lds |  9 +++++++++
+ efi/elf_arm_efi.lds     |  9 +++++++++
+ efi/elf_ia32_efi.lds    |  9 +++++++++
+ efi/elf_x86_64_efi.lds  |  9 +++++++++
+ 8 files changed, 64 insertions(+), 4 deletions(-)
+ create mode 100644 efi/data/sbat.csv.in
+
+diff --git a/Make.defaults b/Make.defaults
+index 7508692..7b5d196 100644
+--- a/Make.defaults
++++ b/Make.defaults
+@@ -13,6 +13,8 @@ PKG_CONFIG	?= $(CROSS_COMPILE)pkg-config
+ CC		= $(CROSS_COMPILE)gcc
+ LD		= $(CROSS_COMPILE)ld
+ OBJCOPY		= $(CROSS_COMPILE)objcopy
++DOS2UNIX  	?= dos2unix
++D2UFLAGS	?= -r -l -F -f -n
+ READELF		= eu-readelf
+ XGETTEXT	= xgettext
+ ABIDIFF		:= abidiff
+diff --git a/Make.rules b/Make.rules
+index c98c112..8d04e7e 100644
+--- a/Make.rules
++++ b/Make.rules
+@@ -3,6 +3,10 @@ define get-config
+ $(shell git config --local --get "fwupdate.$(1)")
+ endef
+ 
++define add-vendor-sbat
++$(OBJCOPY) --add-section ".$(patsubst %.csv,%,$(1))=$(1)" $(2)
++endef
++
+ %.abixml : %.so
+ 	$(ABIDW) --headers-dir $(TOP)/linux/include/ --out-file $@ $^
+ 	@sed -i -s 's,$(TOPDIR)/,,g' $@
+diff --git a/efi/Makefile b/efi/Makefile
+index 722dd73..3990880 100644
+--- a/efi/Makefile
++++ b/efi/Makefile
+@@ -39,6 +39,22 @@ define objcopy_version =
+ endef
+ OBJCOPY_GTE224 := $(shell expr `$(objcopy_version)` \>= 2.24)
+ 
++SBATPATH = data/sbat.csv
++$(SBATPATH): $(SBATPATH).in
++	@sed -e "s,@@VERSION@@,$(VERSION),g" $< > $@
++
++sbat.%.csv : data/sbat.%.csv
++	$(DOS2UNIX) $(D2UFLAGS) $< $@
++	tail -c1 $@ | read -r _ || echo >> $@ # ensure a trailing newline
++
++VENDOR_SBATS := $(foreach x,$(wildcard data/sbat.*.csv),$(notdir $(x)))
++
++sbat_data.o : | $(SBATPATH) $(VENDOR_SBATS)
++sbat_data.o : /dev/null
++	$(CC) $(CFLAGS) -x c -c -o $@ $<
++	$(OBJCOPY) --add-section .sbat=$(SBATPATH) $@
++	$(foreach vs,$(VENDOR_SBATS),$(call add-vendor-sbat,$(vs),$@))
++
+ FWUP = fwupdate
+ 
+ ifeq ($(ARCH),x86_64)
+@@ -94,7 +110,7 @@ ifneq ($(OBJCOPY_GTE224),1)
+ 	$(error objcopy >= 2.24 is required)
+ endif
+ 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym \
+-		-j .rel* -j .rela* -j .reloc -j .eh_frame \
++		-j .rel* -j .rela* -j .reloc -j .eh_frame -j .sbat \
+ 		$(FORMAT) $^ $@
+ 
+ %.efi.debug : %.so
+@@ -102,7 +118,7 @@ ifneq ($(OBJCOPY_GTE224),1)
+ 	$(error objcopy >= 2.24 is required)
+ endif
+ 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym \
+-		-j .rel* -j .rela* -j .reloc -j .eh_frame \
++		-j .rel* -j .rela* -j .reloc -j .eh_frame -j .sbat \
+ 		-j .debug* -j .note.gnu.build-id \
+ 		$^ $@
+ 
+@@ -110,7 +126,7 @@ endif
+ 	$(READELF) -n $^ | grep "Build ID:" | \
+ 		sed -e 's/^.*Build ID: //' -e 's,^\(..\),\1/,' > $@
+ 
+-%.so : %.o
++%.so : %.o sbat_data.o
+ 	$(CC) $(CCLDFLAGS) -o $@ $^ -lefi -lgnuefi \
+ 		$(LIBGCC) \
+ 		-T elf_$(ARCH)_efi.lds
+@@ -120,7 +136,7 @@ endif
+ 
+ clean :
+ 	@rm -vf $(TARGETS) *.o *.so *.efi.signed *.efi *.efi.debug \
+-		*.efi.build-id
++		*.efi.build-id $(SBATPATH)
+ 
+ buildiddir = $(dir $(shell cat $(1).build-id))
+ buildidname = $(notdir $(shell cat $(1).build-id))
+diff --git a/efi/data/sbat.csv.in b/efi/data/sbat.csv.in
+new file mode 100644
+index 0000000..f565445
+--- /dev/null
++++ b/efi/data/sbat.csv.in
+@@ -0,0 +1,2 @@
++sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
++fwupdate,1,UEFI firmware update tool,fwupdate,@@VERSION@@,https://github.com/rhboot/fwupdate
+diff --git a/efi/elf_aarch64_efi.lds b/efi/elf_aarch64_efi.lds
+index 836d982..ea441c8 100644
+--- a/efi/elf_aarch64_efi.lds
++++ b/efi/elf_aarch64_efi.lds
+@@ -39,6 +39,15 @@ SECTIONS
+    _bss_end = .;
+   }
+ 
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++  }
++
+   .rela.dyn : { *(.rela.dyn) }
+   .rela.plt : { *(.rela.plt) }
+   .rela.got : { *(.rela.got) }
+diff --git a/efi/elf_arm_efi.lds b/efi/elf_arm_efi.lds
+index 042164b..97ec827 100644
+--- a/efi/elf_arm_efi.lds
++++ b/efi/elf_arm_efi.lds
+@@ -40,6 +40,15 @@ SECTIONS
+   }
+   .note.gnu.build-id : { *(.note.gnu.build-id) }
+ 
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++  }
++
+   .rel.dyn : { *(.rel.dyn) }
+   .rel.plt : { *(.rel.plt) }
+   .rel.got : { *(.rel.got) }
+diff --git a/efi/elf_ia32_efi.lds b/efi/elf_ia32_efi.lds
+index 2308b8a..d6cdd0d 100644
+--- a/efi/elf_ia32_efi.lds
++++ b/efi/elf_ia32_efi.lds
+@@ -47,6 +47,15 @@ SECTIONS
+   }
+   .note.gnu.build-id : { *(.note.gnu.build-id) }
+ 
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++  }
++
+   . = ALIGN(4096);
+   .dynamic  : { *(.dynamic) }
+   . = ALIGN(4096);
+diff --git a/efi/elf_x86_64_efi.lds b/efi/elf_x86_64_efi.lds
+index 73a79e7..8d30b6b 100644
+--- a/efi/elf_x86_64_efi.lds
++++ b/efi/elf_x86_64_efi.lds
+@@ -47,6 +47,15 @@ SECTIONS
+   }
+   .note.gnu.build-id : { *(.note.gnu.build-id) }
+ 
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++    _esbat = .;
++  }
++
+   . = ALIGN(4096);
+   .dynamic  : { *(.dynamic) }
+   . = ALIGN(4096);
+-- 
+2.37.1
+

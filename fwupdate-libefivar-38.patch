@@ -1,0 +1,24 @@
+diff -up fwupdate-12/linux/util.h.omv~ fwupdate-12/linux/util.h
+--- fwupdate-12/linux/util.h.omv~	2022-08-04 19:40:08.759843044 +0000
++++ fwupdate-12/linux/util.h	2022-08-04 19:41:15.559134457 +0000
+@@ -320,20 +320,6 @@ untilt_slashes(char *s)
+ 	return s;
+ }
+ 
+-typedef struct {
+-	uint16_t year;
+-	uint8_t month;
+-	uint8_t day;
+-	uint8_t hour;
+-	uint8_t minute;
+-	uint8_t second;
+-	uint8_t pad1;
+-	uint32_t nanosecond;
+-	uint16_t timezone;
+-	uint8_t daylight;
+-	uint8_t pad2;
+-} efi_time_t;
+-
+ #define CAPSULE_FLAGS_PERSIST_ACROSS_RESET    0x00010000
+ #define CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE   0x00020000
+ #define CAPSULE_FLAGS_INITIATE_RESET          0x00040000

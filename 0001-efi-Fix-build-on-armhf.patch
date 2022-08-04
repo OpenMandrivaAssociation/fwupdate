@@ -1,0 +1,71 @@
+From c2bd33d6f2c3353e36d08238db11587084ebc1b1 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Sat, 4 Aug 2018 23:06:33 -0500
+Subject: [PATCH 1/6] efi: Fix build on armhf
+
+Debian & Ubuntu are FTBFS currently for armhf with this error:
+$ arm-linux-gnueabihf-gcc -nostdlib -Wl,--warn-common -Wl,--no-undefined -Wl,--fatal-warnings -Wl,-shared -Wl,-Bsymbolic -L/usr/lib -L/usr/lib -Wl,--build-id=sha1 -Wl,--hash-style=sysv /usr/lib/crt0-efi-arm.o -Wl,--defsym=EFI_SUBSYSTEM=0xa -o fakeesrt2.so fakeesrt2.o -lefi -lgnuefi \
+	/usr/lib/gcc/arm-linux-gnueabihf/8/libgcc.a " " \
+	-T elf_arm_efi.lds
+arm-linux-gnueabihf-gcc: error:  : No such file or directory
+
+This is caused by a missing $ in the "sed" command for switching in
+libgcc_eh.
+
+However there is also a secondary problem in that the build is run
+with -fexceptions which doesn't work for armhf.
+
+It fails with this:
+
+$ arm-linux-gnueabihf-gcc -nostdlib -Wl,--warn-common -Wl,--no-undefined -Wl,--fatal-warnings -Wl,-shared -Wl,-Bsymbolic -L/usr/lib -L/usr/lib -Wl,--build-id=sha1 -Wl,--hash-style=sysv /usr/lib/crt0-efi-arm.o -Wl,--defsym=EFI_SUBSYSTEM=0xa -o fakeesrt2.so fakeesrt2.o -lefi -lgnuefi \
+	/usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a \
+	-T elf_arm_efi.lds
+/usr/bin/arm-linux-gnueabihf-ld: warning: /usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(unwind-arm.o) uses 4-byte wchar_t yet the output is to use 2-byte wchar_t; use of wchar_t values across objects may fail
+/usr/bin/arm-linux-gnueabihf-ld: warning: /usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(pr-support.o) uses 4-byte wchar_t yet the output is to use 2-byte wchar_t; use of wchar_t values across objects may fail
+/usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(unwind-arm.o): In function `get_eit_entry':
+(.text+0x154): undefined reference to `__exidx_end'
+(.text+0x158): undefined reference to `__exidx_start'
+/usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(unwind-arm.o): In function `unwind_phase2':
+(.text+0x1f0): undefined reference to `abort'
+/usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(unwind-arm.o): In function `__gnu_Unwind_Resume':
+(.text+0x394): undefined reference to `abort'
+(.text+0x3ac): undefined reference to `abort'
+/usr/lib/gcc-cross/arm-linux-gnueabihf/7/libgcc_eh.a(pr-support.o): In function `_Unwind_GetDataRelBase':
+(.text+0x382): undefined reference to `abort'
+collect2: error: ld returned 1 exit status
+Makefile:114: recipe for target 'fakeesrt2.so' failed
+make: *** [fakeesrt2.so] Error 1
+rm fakeesrt2.o
+---
+ efi/Makefile | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/efi/Makefile b/efi/Makefile
+index f4d079e..722dd73 100644
+--- a/efi/Makefile
++++ b/efi/Makefile
+@@ -10,7 +10,7 @@ include $(TOP)/Make.rules
+ VPATH	= $(TOP)/efi
+ 
+ CFLAGS	?= -Og -g3 -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 \
+-	   -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 \
++	   -fstack-protector-strong --param=ssp-buffer-size=4 \
+ 	   -grecord-gcc-switches
+ BUILDFLAGS	:= $(CFLAGS) -fpic -Werror -Wall -Wextra -fshort-wchar \
+ 	-Wno-error=missing-field-initializers -Wno-missing-field-initializers \
+@@ -24,9 +24,10 @@ CCLDFLAGS	?= -nostdlib -Wl,--warn-common \
+ 	-Wl,--build-id=sha1 -Wl,--hash-style=sysv \
+ 	$(GNUEFIDIR)/crt0-efi-$(ARCH).o
+ CLANG_BUGS	= $(if $(findstring gcc,$(CC)),-maccumulate-outgoing-args,)
+-LIBGCC=$(shell $(CC) -print-libgcc-file-name)
+ ifeq ($(ARCH),arm)
+-LIBGCC+=" $(shell $(CC) -print-libgcc-file-name | sed 's/\.a$/_eh.a/')"
++LIBGCC=$(shell $(CC) -print-libgcc-file-name | sed 's/\.a$$/_eh.a/')
++else
++LIBGCC=$(shell $(CC) -print-libgcc-file-name)
+ endif
+ 
+ define objcopy_version =
+-- 
+2.37.1
+

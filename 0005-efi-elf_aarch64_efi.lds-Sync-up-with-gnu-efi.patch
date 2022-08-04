@@ -1,0 +1,63 @@
+From bbf617e40e8bd7d506acd514f291f6b34b3bd668 Mon Sep 17 00:00:00 2001
+From: vlognouh <nhoangvubk@gmail.com>
+Date: Tue, 24 Dec 2019 16:57:28 +0700
+Subject: [PATCH 5/6] efi/elf_aarch64_efi.lds: Sync up with gnu-efi
+
+---
+ efi/elf_aarch64_efi.lds | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/efi/elf_aarch64_efi.lds b/efi/elf_aarch64_efi.lds
+index 365692d..836d982 100644
+--- a/efi/elf_aarch64_efi.lds
++++ b/efi/elf_aarch64_efi.lds
+@@ -4,7 +4,7 @@ ENTRY(_start)
+ SECTIONS
+ {
+   .text 0x0 : {
+-   _text = .;
++    _text = .;
+     *(.text.head)
+     *(.text)
+     *(.text.*)
+@@ -12,10 +12,11 @@ SECTIONS
+     *(.srodata)
+     *(.rodata*)
+     . = ALIGN(16);
+-    _etext = .;
+   }
++  _etext = .;
++  _text_size = . - _text;
+   .dynamic  : { *(.dynamic) }
+-  .data :
++  .data : ALIGN(4096)
+   {
+    _data = .;
+    *(.sdata)
+@@ -37,20 +38,21 @@ SECTIONS
+    . = ALIGN(16);
+    _bss_end = .;
+   }
+-  .note.gnu.build-id : { *(.note.gnu.build-id) }
+ 
+   .rela.dyn : { *(.rela.dyn) }
+   .rela.plt : { *(.rela.plt) }
+   .rela.got : { *(.rela.got) }
+   .rela.data : { *(.rela.data) *(.rela.data*) }
++  . = ALIGN(512);
+   _edata = .;
+-  _data_size = . - _etext;
++  _data_size = . - _data;
+ 
+   . = ALIGN(4096);
+   .dynsym   : { *(.dynsym) }
+   . = ALIGN(4096);
+   .dynstr   : { *(.dynstr) }
+   . = ALIGN(4096);
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
+   /DISCARD/ :
+   {
+     *(.rel.reloc)
+-- 
+2.37.1
+

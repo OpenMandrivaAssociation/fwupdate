@@ -1,0 +1,27 @@
+From 57cebef08f2afb3e9e97977b4c2ac5f2fa7171ad Mon Sep 17 00:00:00 2001
+From: Ivan Hu <ivan.hu@canonical.com>
+Date: Mon, 10 Dec 2018 15:04:30 +0800
+Subject: [PATCH 3/6] libfwup: shouldn't create ux capsule when getting ux
+ capsule info error
+
+Signed-off-by: Ivan Hu <ivan.hu@canonical.com>
+---
+ linux/libfwup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/linux/libfwup.c b/linux/libfwup.c
+index 521b196..4cfd50f 100644
+--- a/linux/libfwup.c
++++ b/linux/libfwup.c
+@@ -697,7 +697,7 @@ fwup_resource_iter_create(fwup_resource_iter **iter)
+ 
+ 	new->add_ux_capsule = true;
+ 	env = getenv("LIBFWUP_ADD_UX_CAPSULE");
+-	if (env && !strcmp(env, "0") && fwup_get_ux_capsule_info(&x, &y) >= 0)
++	if ((env && !strcmp(env, "0")) || fwup_get_ux_capsule_info(&x, &y) < 0)
+ 		new->add_ux_capsule = false;
+ 
+ 	*iter = new;
+-- 
+2.37.1
+

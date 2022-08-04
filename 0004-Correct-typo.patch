@@ -1,0 +1,25 @@
+From f6b71164c7e6c7b512dffa23c66eb6b7043397db Mon Sep 17 00:00:00 2001
+From: Michael Scherer <mscherer@users.noreply.github.com>
+Date: Thu, 18 Apr 2019 22:43:03 +0200
+Subject: [PATCH 4/6] Correct typo
+
+---
+ README.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index ac02650..8388ea9 100644
+--- a/README.md
++++ b/README.md
+@@ -27,7 +27,7 @@ be installed on the next boot.
+ 6. `libfwup` will set the `BootNext` variable to run that application on next boot.
+ 7. The user will reboot the system.
+ 8. The `fwup.efi` application will examine EFI NVRAM entries to find capsules previously staged.
+-9. The `fwup.efi` applciation will call the BIOS `UpdateCapsule()` method to flash the capsules.
++9. The `fwup.efi` application will call the BIOS `UpdateCapsule()` method to flash the capsules.
+ 10. The BIOS will flash the capsules and then reboot back into the OS.
+ 
+ ## Usage
+-- 
+2.37.1
+
