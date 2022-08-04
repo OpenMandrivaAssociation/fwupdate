@@ -1,0 +1,30 @@
+diff -up fwupdate-12/linux/fwupdate.c.omv~ fwupdate-12/linux/fwupdate.c
+--- fwupdate-12/linux/fwupdate.c.omv~	2022-08-04 20:54:13.494021989 +0000
++++ fwupdate-12/linux/fwupdate.c	2022-08-04 20:57:24.911997741 +0000
+@@ -293,7 +293,7 @@ main(int argc, char *argv[]) {
+ 		dump_log();
+ 
+ 	if (action & ACTION_APPLY) {
+-		guidstr = poptGetArg(optcon);
++		guidstr = strdup(poptGetArg(optcon));
+ 		if (!guidstr) {
+ 			warningx(_("missing argument: %s"), "guid");
+ 			poptPrintUsage(optcon, stderr, 0);
+@@ -303,7 +303,7 @@ main(int argc, char *argv[]) {
+ 		if (rc < 0)
+ 			errorx(1, _("Invalid guid: \"%s\""), guidstr);
+ 
+-		filename = poptGetArg(optcon);
++		filename = strdup(poptGetArg(optcon));
+ 		if (!filename) {
+ 			warningx(_("missing argument: %s"), "<filename.cap>");
+ 			poptPrintUsage(optcon, stderr, 0);
+@@ -396,6 +396,8 @@ main(int argc, char *argv[]) {
+ 			if (iter)
+ 				fwup_resource_iter_destroy(&iter);
+ 
++			free((void*)filename);
++			free((void*)guidstr);
+ 			exit(0);
+ 		}
+ 		errorx(2, _("firmware resource not found"));

@@ -8,7 +8,7 @@
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
 Version:	12
-Release:	4
+Release:	5
 License:	GPLv2+
 Group:	System/Boot and Init
 URL:		https://github.com/rhinstaller/fwupdate
@@ -21,6 +21,7 @@ Patch3:		0004-Correct-typo.patch
 Patch4:		0005-efi-elf_aarch64_efi.lds-Sync-up-with-gnu-efi.patch
 # OMV additions
 Patch10:	fwupdate-libefivar-38.patch
+Patch11:	fwupdate-12-fix-memory-corruption.patch
 BuildRequires:	pkgconfig(efivar) >= 0.21
 BuildRequires:	pkgconfig(efiboot)
 BuildRequires:	popt-devel
