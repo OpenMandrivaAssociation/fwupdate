@@ -8,7 +8,7 @@
 Summary:	Tools to manage UEFI firmware updates
 Name:		fwupdate
 Version:	12
-Release:	5
+Release:	6
 License:	GPLv2+
 Group:	System/Boot and Init
 URL:		https://github.com/rhinstaller/fwupdate
